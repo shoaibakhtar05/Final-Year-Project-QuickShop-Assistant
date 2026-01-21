@@ -61,12 +61,12 @@ QuickShop is an AI‑powered e‑commerce web application developed as a **Final
 
 ### Backend
 
-* Spring Boot (Java) **OR** Django (Python)
+* Django (Python)
 * RESTful APIs
 
 ### Database
 
-* MySQL / PostgreSQL
+* MySQL / SqLite
 
 ### AI & Machine Learning
 
