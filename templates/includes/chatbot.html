@@ -1,0 +1,302 @@
+
+<style>
+  .user-bubble {
+    align-self: flex-end;
+    background-color: #0d6efd;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 16px 16px 0 16px;
+    max-width: 90%;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    text-align: right;
+  }
+
+  .bot-bubble {
+    align-self: flex-start;
+    background-color: #e2e3e5;
+    color: #000;
+    padding: 8px 12px;
+    border-radius: 16px 16px 16px 0;
+    max-width: 90%;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    text-align: left;
+  }
+  
+  /* Make chatbot fully responsive */
+  @media (max-width: 480px) {
+    #chatbot-popup {
+      width: 98vw !important;
+      right: 1vw !important;
+      bottom: 70px;
+    }
+
+    #chatbox {
+      height: 260px;
+    }
+
+    .card-header span {
+      font-size: 0.9rem;
+    }
+
+    .form-control, .btn, .btn-primary {
+      font-size: 0.85rem;
+    }
+  }
+</style>
+
+<!-- Chatbot Toggle Button -->
+<button class="btn btn-primary" id="chatbot-btn" style="position: fixed; bottom: 22px; right: 20px; z-index: 1000;">
+  💬 AI Assistant
+</button>
+
+<!-- Chatbot Popup -->
+<div id="chatbot-popup" class="card" style="position: fixed; bottom: 80px; right: 20px; width: 340px; display: none; z-index: 1000;">
+  <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+    <span>🛍️ QuickShop Assistant</span>
+    <button class="btn-close btn-close-white" id="close-chatbot"></button>
+  </div>
+
+  <!-- Chatbox Messages Area -->
+  <div class="card-body" id="chatbox" style="height: 340px; overflow-y: auto; background-color: #f8f9fa; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+    <div class="text-center text-muted">How can I help you today?</div>
+  </div>
+
+  <!-- Chat Input + Voice + Image Upload -->
+  <div class="card-footer">
+    <!-- Chat Form -->
+    <form id="chat-form">
+      <div class="input-group mb-2">
+        <input type="text" id="chat-input" class="form-control" placeholder="Type your message..." required>
+        <button id="voice-btn" class="btn btn-outline-secondary"><i class="fas fa-microphone"></i> </button>
+        {% comment %} <button id="voice-btn" class="voice-input" type="button">🎤</button> {% endcomment %}
+        <button class="btn btn-primary" type="submit">Send</button>
+      </div>
+    </form>
+
+    <!-- Image Form -->
+    <form id="image-form" enctype="multipart/form-data" class="d-flex flex-column gap-1">
+      <input type="file" id="product-image" accept="image/*" class="form-control">
+      <button type="submit" class="btn btn-primary">Search by Image</button>
+    </form>
+
+    <!-- Placeholder for image/chat results -->
+    <div id="chat-area" class="chat-area mt-2"></div>
+  </div>
+</div>
+
+<script>
+  // Toggle chatbot popup
+ document.getElementById("chatbot-btn").addEventListener("click", () => {
+  fetch("/chatbot/user-info/")
+    .then(response => response.json())
+    .then(data => {
+      if (data.logged_in) {
+        const popup = document.getElementById("chatbot-popup");
+        const chatbox = document.getElementById("chatbox");
+        const chatbotTitle = document.getElementById("chatbot-title");
+
+        popup.style.display = popup.style.display === "block" ? "none" : "block";
+
+        if (popup.style.display === "block") {
+          chatbox.innerHTML = `<div class="text-center text-muted">Welcome, <b>${data.name}</b>! How can I help you today?</div>`;
+        }
+      } else {
+        alert("Please log in to use the chatbot.");
+      }
+    });
+});
+
+document.getElementById("close-chatbot").addEventListener("click", () => {
+  document.getElementById("chatbot-popup").style.display = "none";
+});
+
+document.getElementById("close-chatbot").addEventListener("click", () => {
+  document.getElementById("chatbot-popup").style.display = "none";
+});
+  document.getElementById("close-chatbot").addEventListener("click", () => {
+    document.getElementById("chatbot-popup").style.display = "none";
+  });
+
+  document.getElementById("close-chatbot").addEventListener("click", () => {
+    document.getElementById("chatbot-popup").style.display = "none";
+  });
+
+  // CSRF token getter
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Chat Form Submission
+  document.getElementById("chat-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const input = document.getElementById("chat-input");
+    const message = input.value.trim();
+    if (!message) return;
+
+    input.value = "";
+    const chatbox = document.getElementById("chatbox");
+
+// Remove any existing feedback messages
+const oldFeedbacks = chatbox.querySelectorAll(".chat-feedback");
+oldFeedbacks.forEach(fb => fb.remove());
+
+
+    // Show user message
+    const userBubble = document.createElement("div");
+    userBubble.className = "user-bubble";
+    userBubble.textContent = message;
+    chatbox.appendChild(userBubble);
+    // Send message to backend
+    fetch("/chatbot/query/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+        body: JSON.stringify({ 
+    message: message,
+  }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const botBubble = document.createElement("div");
+        botBubble.className = "bot-bubble";
+
+        if (data.response.includes("<div")) {
+          botBubble.innerHTML = data.response;
+        } else {
+          const badge = document.createElement("span");
+          badge.className = "badge bg-light text-dark p-1";  
+          badge.style.whiteSpace = "pre-wrap";
+          badge.style.wordBreak = "break-word";
+          badge.style.fontSize = "1rem";   // Increase font size (you can try "1.5rem" or "20px" too)
+          badge.style.lineHeight = "1.2";    
+          badge.textContent = data.response || "Sorry, I couldn't understand that.";
+          botBubble.appendChild(badge);
+        }
+
+        chatbox.appendChild(botBubble);
+
+        // Add feedback buttons below the bot response
+        appendFeedbackButtons(chatbox);
+
+        chatbox.scrollTop = chatbox.scrollHeight;
+      });
+  });
+
+  function appendFeedbackButtons(container) {
+   const feedbackDiv = document.createElement("div");
+feedbackDiv.className = "text-center mt-2 chat-feedback";
+    feedbackDiv.innerHTML = `
+      <span>Was this helpful?</span>
+      <button class="btn btn-sm btn-success ms-2 feedback-btn" data-feedback="yes">Yes</button>
+      <button class="btn btn-sm btn-danger ms-2 feedback-btn" data-feedback="no">No</button>
+    `;
+    container.appendChild(feedbackDiv);
+
+    feedbackDiv.querySelectorAll(".feedback-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const feedback = btn.dataset.feedback;
+        fetch("/chatbot/feedback/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken"),
+          },
+          body: JSON.stringify({ helpful: feedback }),
+        }).then(() => {
+          feedbackDiv.innerHTML = `<small class="text-success">Thank you for your feedback!</small>`;
+        }).catch(err => {
+          console.error("Feedback error:", err);
+          feedbackDiv.innerHTML = `<small class="text-danger">Error submitting feedback.</small>`;
+        });
+      });
+    });
+  }
+
+  // Voice Recognition
+  document.addEventListener("DOMContentLoaded", () => {
+    const voiceBtn = document.getElementById("voice-btn");
+    const chatInput = document.getElementById("chat-input");
+    const chatForm = document.getElementById("chat-form");
+
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+
+      voiceBtn.addEventListener('click', () => {
+        recognition.start();
+      });
+
+      recognition.onresult = function (event) {
+        const transcript = event.results[0][0].transcript;
+        chatInput.value = transcript;
+        chatForm.dispatchEvent(new Event("submit")); // Auto submit
+      };
+
+      recognition.onerror = function (event) {
+        alert("Voice recognition error: " + event.error);
+      };
+    } else {
+      voiceBtn.disabled = true;
+      voiceBtn.title = "Voice recognition not supported";
+    }
+
+    // Image Search Submission
+    const imageForm = document.getElementById("image-form");
+    const fileInput = document.getElementById("product-image");
+    const chatbox = document.getElementById("chatbox");
+
+// Remove any existing feedback messages
+const oldFeedbacks = chatbox.querySelectorAll(".chat-feedback");
+oldFeedbacks.forEach(fb => fb.remove());
+
+
+    imageForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append("image", fileInput.files[0]);
+
+      fetch("/chatbot/image-search/", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCookie("csrftoken"),
+        },
+        body: formData,
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          const botBubble = document.createElement("div");
+          botBubble.className = "bot-bubble";
+          botBubble.innerHTML = data.response;
+          chatbox.appendChild(botBubble);
+
+          // Add feedback after image search response
+          appendFeedbackButtons(chatbox);
+
+          chatbox.scrollTop = chatbox.scrollHeight;
+
+          fileInput.value = "";
+        })
+        .catch((error) => {
+          console.error("Image search error:", error);
+        });
+    });
+  });
+</script>
+

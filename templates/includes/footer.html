@@ -1,0 +1,57 @@
+<!-- ========================= FOOTER ========================= -->
+{% load static %}
+<footer class="section-footer border-top bg-primary text-white pt-4">
+    <div class="container footer-container">
+        <div class="row footer-bottom  pt-6">
+            <!-- Logo & Description -->
+            <div class="col-md-4 mb-4 mb-md-0">
+                <img class="logo mb-2" src="{% static './images/logo5.png' %}" alt="QuickShop Logo" style="max-width: 170px;">
+                <p class="text-light small">@2025 QuickShop. All copy rights reserved by the website.</p>
+            </div>
+
+            <!-- Shopping Links -->
+            <div class="col-md-4 mb-4 mb-md-0 text-center">
+                <h5 class="text-uppercase mb-3">Shopping</h5>
+                <ul class="list-unstyled">
+                    <li><a href="{% url 'store' %}" class="text-white-50 text-decoration-none d-block py-1">Laptops</a></li>
+                    <li><a href="{% url 'store' %}" class="text-white-50 text-decoration-none d-block py-1">Computers</a></li>
+                    <li><a href="#" class="text-white-50 text-decoration-none d-block py-1">Mobiles</a></li>
+                </ul>
+            </div>
+
+            <!-- Address -->
+            <div class="col-md-4 text-md-end">
+                <h5 class="text-uppercase mb-3">Address</h5>
+                <p class="small text-white-50 mb-1">University of Mianwali</p>
+                <p class="small text-white-50 mb-1">Mianwali, Punjab, Pakistan</p>
+              <div class="f-mail">
+                    <input type="email" placeholder="Your Email">
+                    <i class='bx bx-envelope'></i>
+                </div>
+                {% comment %} <div class="mt-2">
+                    <i class="fab fa-lg fa-cc-visa me-2"></i>
+                    <i class="fab fa-lg fa-cc-paypal me-2"></i>
+                    <i class="fab fa-lg fa-cc-mastercard"></i>
+                </div> {% endcomment %}
+            </div>
+        </div>
+		 <div class="f-design border-top pt-3">
+            <div class="f-design-txt container pb-4">
+                <p>@2025 Project, QuickShop Design and code by the Developers.</p>
+            </div>
+        </div>
+    </div>
+</footer>
+<!-- ========================= FOOTER END // ========================= -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+	$(document).ready(function(){
+		$('.thumb a').click(function(e){
+			e.preventDefault();
+			$('.mainImage img').attr('src', $(this).attr("href"));
+		})
+	})
+</script>
+
+</body>
+</html>
